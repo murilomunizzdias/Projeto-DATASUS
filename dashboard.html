@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel SINASC Pará</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Manrope:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" />
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div class="band"><div class="wrap">
+<header>
+  <div><div class="sub">SINASC · Pará · jan–ago 2026</div><h1>Nascidos vivos e peso ao nascer</h1></div>
+</header>
+<nav id="nav" role="tablist">
+  <button data-t="exp" aria-selected="true">Exploração</button>
+  <button data-t="rel" aria-selected="false">Relações</button>
+  <button data-t="reg" aria-selected="false">Regressão</button>
+  <button data-t="hip" aria-selected="false">Hipóteses</button>
+  <button data-t="imp" aria-selected="false">Impacto</button>
+</nav>
+</div></div>
+<div class="wrap">
+
+<div class="filters" id="filters">
+  <div class="f"><label>Mês</label><div class="row"><select id="fm0"></select><select id="fm1"></select></div></div>
+  <div class="f"><label>Sexo</label><select id="fsexo"><option value="">Todos</option><option value="0">Feminino</option><option value="1">Masculino</option></select></div>
+  <div class="f"><label>Parto</label><select id="fparto"><option value="">Todos</option><option value="0">Vaginal</option><option value="1">Cesáreo</option></select></div>
+  <div class="f"><label>Gravidez</label><select id="fmult"><option value="">Todas</option><option value="0">Única</option><option value="1">Múltipla</option></select></div>
+  <div class="f"><label>Município</label><select id="fmun"></select></div>
+  <div class="f"><label>Consultas pré-natal</label><div class="chips" id="fcons"></div></div>
+  <div class="f"><label>Idade da mãe</label><div class="row"><input type="number" id="fi0" min="8" max="55" value="8"><input type="number" id="fi1" min="8" max="55" value="55"></div></div>
+  <div class="f"><label>Semanas</label><div class="row"><input type="number" id="fs0" min="19" max="45" value="19"><input type="number" id="fs1" min="19" max="45" value="45"></div></div>
+  <button class="btn" id="reset">Limpar filtros</button>
+  <div class="count"><b id="nflt">0</b> / <span id="ntot"></span> nascimentos</div>
+</div>
+
+<section class="tab on" id="t-exp">
+  <div class="kpis" id="kpis"></div>
+  <div class="grid">
+    <div class="card c12">
+      <h3>Explorador por grupo</h3>
+      <p class="goal">Comparar uma métrica entre categorias de uma variável, com intervalo de confiança de 95%.</p>
+      <div class="ctl">
+        <div class="f"><label>Agrupar por</label><select id="xdim"></select></div>
+        <div class="f"><label>Métrica</label><select id="xmet"></select></div>
+      </div>
+      <div class="grid">
+        <div class="c7" style="min-width:0"><div class="ch tall"><canvas id="cx"></canvas></div></div>
+        <div class="c5 tw" style="min-width:0"><table id="tx"></table></div>
+      </div>
+    </div>
+    <div class="card c6">
+      <h3>Nascimentos e peso médio por mês</h3>
+      <p class="goal">Acompanhar volume e peso médio ao longo do período dos dados.</p>
+      <div class="ch"><canvas id="cmes"></canvas></div>
+    </div>
+    <div class="card c6">
+      <h3>Distribuição de uma variável</h3>
+      <p class="goal">Verificar a forma da distribuição e a posição do ponto de corte clínico.</p>
+      <div class="ctl"><div class="f"><label>Variável</label><select id="hvar"></select></div></div>
+      <div class="ch"><canvas id="chist"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<section class="tab" id="t-rel">
+  <div class="grid">
+    <div class="card c8">
+      <h3>Relação entre duas variáveis</h3>
+      <p class="goal">Examinar como a média da métrica varia ao longo de uma variável explicativa, com faixa de IC 95%.</p>
+      <div class="ctl">
+        <div class="f"><label>Eixo X</label><select id="rx"></select></div>
+        <div class="f"><label>Métrica (Y)</label><select id="rmet"></select></div>
+      </div>
+      <div class="ch tall"><canvas id="crel"></canvas></div>
+    </div>
+    <div class="card c4">
+      <h3>Associação linear simples</h3>
+      <p class="goal">Quantificar a força e a inclinação da relação X–Y nos registros filtrados.</p>
+      <div class="tiles" id="rtiles"></div>
+    </div>
+    <div class="card c12">
+      <h3>Matriz de correlação de Pearson</h3>
+      <p class="goal">Identificar pares de variáveis numéricas associadas e possível colinearidade entre explicativas.</p>
+      <div class="tw"><table class="cm" id="cm"></table></div>
+    </div>
+  </div>
+</section>
+
+<section class="tab" id="t-reg">
+  <div class="grid">
+    <div class="card c12">
+      <h3>Ajuste do modelo de regressão linear múltipla</h3>
+      <p class="goal">Resumir a qualidade global do ajuste e sua estabilidade em validação cruzada.</p>
+      <div class="tiles" id="mtiles"></div>
+    </div>
+    <div class="card c7">
+      <h3>Coeficientes (erros-padrão robustos HC3)</h3>
+      <p class="goal">Estimar o efeito de cada variável sobre o peso, em gramas, com IC 95% e valor-p.</p>
+      <div class="tw"><table id="tcoef"></table></div>
+    </div>
+    <div class="card c5">
+      <h3>Coeficientes padronizados</h3>
+      <p class="goal">Comparar a importância relativa das variáveis em uma mesma escala.</p>
+      <div class="ch tall"><canvas id="cbeta"></canvas></div>
+    </div>
+    <div class="card c6">
+      <h3>Comparação de modelos (treino Jan–Jun, teste Jul–Ago)</h3>
+      <p class="goal">Escolher entre especificações pelo desempenho fora da amostra frente à referência.</p>
+      <div class="tw"><table id="tcmp"></table></div>
+      <div class="ch short" style="margin-top:10px"><canvas id="ccmp"></canvas></div>
+    </div>
+    <div class="card c6">
+      <h3>Calibração por decil</h3>
+      <p class="goal">Checar se o peso previsto acompanha o peso observado em toda a faixa de previsões.</p>
+      <div class="ch tall"><canvas id="ccal"></canvas></div>
+    </div>
+    <div class="card c6">
+      <h3>Observado × previsto</h3>
+      <p class="goal">Avaliar a dispersão dos erros de previsão em uma amostra de registros.</p>
+      <div class="ch tall"><canvas id="cobs"></canvas></div>
+    </div>
+    <div class="card c6">
+      <h3>Resíduos × valores ajustados</h3>
+      <p class="goal">Diagnosticar variância constante e linearidade das suposições do modelo.</p>
+      <div class="ch tall"><canvas id="cres"></canvas></div>
+    </div>
+    <div class="card c4">
+      <h3>Fator de inflação da variância</h3>
+      <p class="goal">Detectar multicolinearidade entre as variáveis explicativas.</p>
+      <div class="tw"><table id="tvif"></table></div>
+    </div>
+    <div class="card c8">
+      <h3>Previsão para um cenário</h3>
+      <p class="goal">Prever o peso ao nascer a partir de características informadas, com intervalo de previsão de 95%.</p>
+      <div class="grid">
+        <div class="c5 sl" style="min-width:0" id="calc"></div>
+        <div class="c7" style="min-width:0">
+          <div class="tiles" id="ptiles"></div>
+          <div class="ch short"><canvas id="cpsem"></canvas></div>
+        </div>
+      </div>
+      <div class="ch short" style="margin-top:12px"><canvas id="cpcons"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<section class="tab" id="t-hip">
+  <div class="grid">
+    <div class="card c12">
+      <h3>Testes de hipóteses do estudo</h3>
+      <p class="goal">Registrar estatística, graus de liberdade, tamanho de efeito, IC e decisão de cada hipótese formulada.</p>
+      <div class="tw"><table id="thip"></table></div>
+    </div>
+    <div class="card c6">
+      <h3>Valor-p ajustado por Bonferroni</h3>
+      <p class="goal">Comparar cada valor-p ajustado ao nível de significância de 5% (escala logarítmica).</p>
+      <div class="ch tall"><canvas id="cp"></canvas></div>
+    </div>
+    <div class="card c6">
+      <h3>Teste de duas amostras sobre os dados filtrados</h3>
+      <p class="goal">Testar H₀ de igualdade de médias entre dois grupos escolhidos, com t de Welch.</p>
+      <div class="ctl">
+        <div class="f"><label>Comparar</label><select id="tg"></select></div>
+        <div class="f"><label>Desfecho</label><select id="tmet"></select></div>
+        <div class="f"><label>α</label><select id="talpha"><option>0.05</option><option>0.01</option><option value="0.0071">0.0071</option></select></div>
+      </div>
+      <div class="tiles" id="ttiles"></div>
+      <div class="ch short"><canvas id="ctg"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<section class="tab" id="t-imp">
+  <div class="grid">
+    <div class="card c12">
+      <h3>Cenários do estudo (todo o conjunto)</h3>
+      <p class="goal">Quantificar o efeito de elevar o pré-natal a 6 consultas sobre o baixo peso, pelo coeficiente do modelo.</p>
+      <div class="tw"><table id="timp"></table></div>
+    </div>
+    <div class="card c5">
+      <h3>Simulador de meta de consultas</h3>
+      <p class="goal">Estimar casos de baixo peso evitados, nos registros filtrados, para uma meta mínima de consultas.</p>
+      <div class="sl">
+        <div class="f"><label>Meta mínima de consultas</label><div class="row"><input type="range" id="smeta" min="1" max="12" value="6"><span class="lbl" id="smetav" style="color:var(--accent);font-size:13px">6</span></div></div>
+        <div class="f"><label>Coeficiente aplicado</label><select id="scoef"><option value="todos">Todos os nascimentos</option><option value="termo">37 semanas ou mais (conservador)</option></select></div>
+      </div>
+      <div class="tiles" id="stiles" style="margin-top:10px"></div>
+    </div>
+    <div class="card c7">
+      <h3>Casos evitados conforme a meta</h3>
+      <p class="goal">Mostrar a sensibilidade do ganho à meta e à escolha do coeficiente.</p>
+      <div class="ch"><canvas id="csens"></canvas></div>
+    </div>
+    <div class="card c12">
+      <h3>Taxa de baixo peso antes e depois</h3>
+      <p class="goal">Comparar a taxa de baixo peso observada com a taxa simulada para a meta escolhida.</p>
+      <div class="ch short"><canvas id="cant"></canvas></div>
+    </div>
+  </div>
+</section>
+</div>
+
+    <script src="script.js"></script>
+</body>
+</html>
