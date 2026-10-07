@@ -1,4 +1,4 @@
-  const D = {
+const D = {
     registros: {
       mes: [
         3, 3, 7, 2, 1, 6, 6, 0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 5, 6, 6, 6, 7,
@@ -46681,12 +46681,20 @@
     };
   }
   function renderHip() {
+    // Calcula p ajustado (Bonferroni) e decisão de H0 quando o JSON não os traz
+    const m = D.testes.length;
+    D.testes.forEach((t) => {
+      if (t["p ajustado (Bonferroni)"] == null)
+        t["p ajustado (Bonferroni)"] = Math.min(1, t["p-valor"] * m);
+      if (t["Rejeita H0"] == null)
+        t["Rejeita H0"] = t["p ajustado (Bonferroni)"] < 0.05 ? "Sim" : "Não";
+    });
     $("thip").innerHTML =
       "<tr><th>Hipótese</th><th>Teste</th><th>Estatística</th><th>gl</th><th>Valor-p</th><th>p ajustado</th><th>Efeito</th><th>Diferença</th><th>IC 95%</th><th>Rejeita H₀</th></tr>" +
       D.testes
         .map(
           (t) =>
-            `<tr><td>${t["Hipótese"]}</td><td>${t["Teste"]}</td><td>${fmt(t["Estatística"], 2)}</td><td>${fmt(t.gl, t.gl % 1 ? 1 : 0)}</td><td>${fp(t["p-valor"])}</td><td>${fp(t["p ajustado (Bonferroni)"])}</td><td>${t["Efeito"]}</td><td>${t["Diferença"]}</td><td>${t["IC 95% da diferença"]}</td><td>${t["Rejeita H0"]}</td></tr>`,
+            `<tr><td>${t["Hipótese"]}</td><td>${t["Teste"]}</td><td>${fmt(t["Estatística"], 2)}</td><td>${typeof t.gl === "string" ? t.gl : fmt(t.gl, t.gl % 1 ? 1 : 0)}</td><td>${fp(t["p-valor"])}</td><td>${fp(t["p ajustado (Bonferroni)"])}</td><td>${t["Efeito"]}</td><td>${t["Diferença"]}</td><td>${t["IC 95% da diferença"]}</td><td>${t["Rejeita H0"]}</td></tr>`,
         )
         .join("");
     const L = D.testes.map((t) => t["Hipótese"].split(":")[0]),
